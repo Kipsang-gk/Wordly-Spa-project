@@ -5,89 +5,49 @@ changeThemeButton.addEventListener('click', () => {
   document.body.classList.toggle('light-theme');
 });
 
-// Function to search for a word in the dictionary API
-const initializeWordSearch = () => {
-  const searchInput = document.getElementById('searchbox');
-  searchInput.addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      searchWord();
-    }
-  });
+let searchField = document.getElementById('searchBox');
+searchField.addEventListener('input', (event) => {
+  // Handle search input changes
+});
+
+let submitButton = document.getElementById('submitBtn');
+submitButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  let searchTerm = searchField.value.trim();
+  if (searchTerm) {
+    // Perform search operation with searchTerm
+    console.log(`Searching for: ${searchTerm}`);
+  } else {
+    console.log('Please enter a word to search.');
+  }
+});
+
+let wordDescription = document.getElementById('definition-container');
+wordDescription.addEventListener()
+
+function displayWordDescription(word) {
+  // Fetch and display the word description
+  // This is a placeholder for the actual implementation
+  wordDescription.textContent = `Description for ${word}`;
 };
 
-function displayWordData(data) {
-  const resultContainer = document.getElementById('resultContainer');
-  resultContainer.innerHTML = ''; // Clear previous results
+let savedWordsField = document.getElementById('savedWords');
+savedWordsField.addEventListener()
 
-  if (data && data.length > 0) {
-    const wordData = data[0];
-    const word = wordData.word;
-    const phonetics = wordData.phonetics.map(p => p.text).join(', ');
-    const meanings = wordData.meanings.map(meaning => {
-      const definitions = meaning.definitions.map(def => `<li>${def.definition}</li>`).join('');
-      return `<h3>${meaning.partOfSpeech}</h3><ul>${definitions}</ul>`;
-    }).join('');
-
-    resultContainer.innerHTML = `
-      <h2>${word}</h2>
-      <p>Phonetics: ${phonetics}</p>
-      ${meanings}
-    `;
-  } else {
-    resultContainer.innerHTML = '<p>No results found.</p>';
-  }
-}
-
-function searchWord() {
-  let searchInput = document.getElementById("searchbox").value.trim();
-  if (searchInput) {
-    fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${searchInput}`)
-      .then(response => response.json())
-      .then(data => {
-        displayWordData(data);
-      })
-      .catch(error => {
-        console.error("Error fetching data:", error);
-        const resultContainer = document.getElementById('resultContainer');
-        resultContainer.innerHTML = '<p>Error fetching data. Please try again later.</p>';
-      });
-  } else {
-    const resultContainer = document.getElementById('resultContainer');
-    resultContainer.innerHTML = '<p>Please enter a word to search.</p>';
-  }
-}
-
-// Initialize the word search functionality
-initializeWordSearch();
+function displaySavedWords(words) {
+  // Display saved words in the input field
+  savedWordsField.value = words.join(', ');
+};
 
 
-// fetch("https://api.dictionaryapi.dev/api/v2/entries/en/<word>")
-// .then(response => response.json(data))
-// .then(data => {
-//     console.log(data);
-// })
-// .catch(error => {
-//     console.error("Error fetching data:", error);
-// });
+let synonymsAntonymsField = document.getElementById('synonymsAntonyms');
+synonymsAntonymsField.addEventListener()
 
-// function searchWord() {
-//   let userInput = document.getElementById('searchbox').value;
-//   userInput.value.addEventListener('keypress', function(event) {
-//     if (event.key === 'Enter') {
-//       event.preventDefault();
-//       let searchInput = document.getElementById("searchbox").value;
-//       fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${searchInput}`)
-//         .then(response => response.json())
-//         .then(data => {
-//           console.log(data);
-//           // You can add code here to display the data on the webpage
-//         })
-//         .catch(error => {
-//           console.error("Error fetching data:", error);
-//         }); 
+function displaySynonymsAntonyms(synonyms, antonyms) {
+  // Display synonyms and antonyms in the input field
+  synonymsAntonymsField.value = `Synonyms: ${synonyms.join(', ')} | Antonyms: ${antonyms.join(', ')}`;
+};
 
-// }
 
-let searchInput = document.getElementById("searchIcon");
-searchInput.addEventListener('click', searchWord);
+let audioPlaybackField = document.getElementById('audioPlayback');
+audioPlaybackField.addEventListener()

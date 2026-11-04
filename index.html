@@ -25,11 +25,11 @@
         
         <!-- Search Row -->
         <div class="flex flex-col gap-2">
-          <label for="searchbox" class="text-sm font-bold text-gray-700">Look Up Word:</label>
+          <label for="searchBox" class="text-sm font-bold text-gray-700">Look Up Word:</label>
           <div class="flex gap-2">
-            <input type="text" id="searchbox" placeholder="Key in a word to search for..." 
+            <input type="text" id="searchBox" placeholder="Key in a word to search for..." 
                    class="flex-1 p-3 text-base border-2 border-gray-300 rounded-lg outline-none focus:border-blue-600 transition placeholder:text-gray-400">
-            <input type="submit" value="Search" id="searchicon" 
+            <input type="submit" value="Search" id="submitBtn" 
                    class="px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md cursor-pointer transition">
           </div>
         </div>
@@ -48,9 +48,9 @@
         <div class="flex flex-col gap-2">
           <label class="text-sm font-bold text-gray-700"> Additional Info:</label>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input type="text" placeholder="Saved Words:" class="inputinfo w-full p-3 text-base border-2 border-gray-300 rounded-lg outline-none focus:border-blue-600 transition">
-            <input type="text" placeholder="Synonyms &Antonyms..." class="inputinfo w-full p-3 text-base border-2 border-gray-300 rounded-lg outline-none focus:border-blue-600 transition">
-            <input type="text" placeholder="Audio Playback..." class="inputinfo w-full p-3 text-base border-2 border-gray-300 rounded-lg outline-none focus:border-blue-600 transition">
+            <input type="text" id="savedWords" placeholder="Saved Words:" class="inputinfo w-full p-3 text-base border-2 border-gray-300 rounded-lg outline-none focus:border-blue-600 transition">
+            <input type="text" id="synonymsAntonyms" placeholder="Synonyms &Antonyms..." class="inputinfo w-full p-3 text-base border-2 border-gray-300 rounded-lg outline-none focus:border-blue-600 transition">
+            <input type="text" id="audioPlayback" placeholder="Audio Playback..." class="inputinfo w-full p-3 text-base border-2 border-gray-300 rounded-lg outline-none focus:border-blue-600 transition">
           </div>
         </div>
         

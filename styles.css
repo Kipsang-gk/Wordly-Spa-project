@@ -1,0 +1,24 @@
+
+  body.dark-theme {
+    background-color: #111827;
+    color: #f9fafb;
+  }
+
+  body.dark-theme #formId {
+    background-color: #1f2937;
+    border-color: #374151;
+  }
+
+  body.dark-theme #formId h1,
+  body.dark-theme #formId p,
+  body.dark-theme #formId label,
+  body.dark-theme #formId span {
+    color: #e5e7eb;
+  }
+
+  body.dark-theme #formId input,
+  body.dark-theme #definition-container {
+    background-color: #374151;
+    color: #f9fafb;
+    border-color: #4b5563;
+  }

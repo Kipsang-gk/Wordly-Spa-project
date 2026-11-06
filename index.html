@@ -35,28 +35,39 @@
         </div>
         <!-- Definition Row -->
         <div class="flex flex-col gap-2">
-             <span class="text-sm font-bold text-gray-700">Definition:</span>
+             <div class="flex items-center justify-between gap-3">
+               <span class="text-sm font-bold text-gray-700">Definition:</span>
+               <button type="button" id="saveWordButton" disabled
+                 class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md disabled:cursor-not-allowed transition">
+                 Save word
+               </button>
+             </div>
 
              <!-- Min-height acts as the starting size; it will automatically grow vertically for long text -->
                <div id="definition-container" class="w-full min-h-[50px] p-4 bg-gray-50 border-2 border-bold border-gray-200 rounded-lg text-base text-gray-500 italic transition-all duration-200">
                  Definition, part of speech and example will appear here...
                </div>
+               <p id="savedWordsStatus" class="text-sm text-gray-600" role="status" aria-live="polite"></p>
         </div>
 
         <!-- Info Row -->
         <div class="flex flex-col gap-2">
           <label class="text-sm font-bold text-gray-700"> Additional Info:</label>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <p id="savedWords" placeholder="Saved Words:" class="inputinfo w-full p-3 text-base border-2 border-gray-300 rounded-lg outline-none focus:border-blue-600 transition">
-            </p>
-            <p id="synonymsAntonyms" placeholder="Synonyms & Antonyms..." class="inputinfo w-full p-3 text-base border-2 border-gray-300 rounded-lg outline-none focus:border-blue-600 transition">
-            </p>
-            <p id="audioPlayback" placeholder="Audio Playback..." class="inputinfo w-full p-3 text-base border-2 border-gray-300 rounded-lg outline-none focus:border-blue-600 transition">
+            <section class="inputinfo w-full p-3 text-base border-2 border-gray-300 rounded-lg">
+              <h2 class="text-sm font-bold text-gray-700 mb-2">Saved Words</h2>
+              <p id="savedWordsEmpty" class="text-sm text-gray-500">No saved words yet.</p>
+              <ul id="savedWords" class="space-y-2"></ul>
+            </section>
+            <div id="synonymsAntonyms" class="inputinfo w-full p-3 text-base border-2 border-gray-300 rounded-lg">
+              Synonyms and antonyms will appear here.
+            </div>
+            <div id="audioPlayback" class="inputinfo w-full p-3 text-base border-2 border-gray-300 rounded-lg">
               <audio controls id="audioControl" class="w-full">
-              <source id="audioSource" src="" type="audio/mpeg">
+                <source id="audioSource" src="" type="audio/mpeg">
                 Your browser does not support the audio element.
               </audio>
-            </p>
+            </div>
           </div>
         </div>
       </form>

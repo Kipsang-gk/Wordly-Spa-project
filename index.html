@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordly</title>
-    <!-- Tailwind CDN URL -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 
-    <!-- Main Card Container -->
     <div id="formId" class="w-full max-w-xl bg-white p-8 rounded-xl shadow-lg border border-gray-200">
       
       <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Wordly dictionary</h1>
@@ -21,9 +19,8 @@
         Welcome to the Single Page Application! Here you can find all the information you need.
       </p>
       
-      <form id="formData" class="space-y-5" onsubmit="event.preventDefault();">
+      <form id="formData" class="space-y-5">
         
-        <!-- Search Row -->
         <div class="flex flex-col gap-2">
           <label for="searchBox" class="text-sm font-bold text-gray-700">Look Up Word:</label>
           <div class="flex gap-2">
@@ -33,24 +30,29 @@
                    class="px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md cursor-pointer transition">
           </div>
         </div>
-        <!-- Definition Row -->
         <div class="flex flex-col gap-2">
              <div class="flex items-center justify-between gap-3">
                <span class="text-sm font-bold text-gray-700">Definition:</span>
-               <button type="button" id="saveWordButton" disabled
-                 class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md disabled:cursor-not-allowed transition">
-                 Save word
-               </button>
+               <div class="flex flex-wrap items-center justify-end gap-2">
+                 <button type="button" id="playWordButton" disabled
+                   class="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md disabled:cursor-not-allowed transition"
+                   aria-label="Play word and definition">
+                   Play word and definition
+                 </button>
+                 <button type="button" id="saveWordButton" disabled
+                   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md disabled:cursor-not-allowed transition">
+                   Save word
+                 </button>
+               </div>
              </div>
 
-             <!-- Min-height acts as the starting size; it will automatically grow vertically for long text -->
                <div id="definition-container" class="w-full min-h-[50px] p-4 bg-gray-50 border-2 border-bold border-gray-200 rounded-lg text-base text-gray-500 italic transition-all duration-200">
                  Definition, part of speech and example will appear here...
                </div>
+               <p id="pronunciationStatus" class="text-sm text-gray-600" role="status" aria-live="polite"></p>
                <p id="savedWordsStatus" class="text-sm text-gray-600" role="status" aria-live="polite"></p>
         </div>
 
-        <!-- Info Row -->
         <div class="flex flex-col gap-2">
           <label class="text-sm font-bold text-gray-700"> Additional Info:</label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">

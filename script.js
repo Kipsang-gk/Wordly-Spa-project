@@ -10,6 +10,8 @@ const searchField = document.getElementById('searchBox');
 const definition = document.getElementById('definition-container');
 const synonymsAntonyms = document.getElementById('synonymsAntonyms');
 const saveWordButton = document.getElementById('saveWordButton');
+const playWordButton = document.getElementById('playWordButton');
+const pronunciationStatus = document.getElementById('pronunciationStatus');
 const savedWordsList = document.getElementById('savedWords');
 const savedWordsEmpty = document.getElementById('savedWordsEmpty');
 const savedWordsStatus = document.getElementById('savedWordsStatus');
@@ -19,23 +21,10 @@ let currentWord = '';
 let savedWords = [];
 let activeSearchId = 0;
 let activeSearchController = null;
-
-function getSearchCandidates(rawWord) {
-  const trimmed = rawWord.trim();
-  if (!trimmed) return [];
-
-  const lowerCaseWord = trimmed.toLowerCase();
-  const candidates = [
-    trimmed,
-    lowerCaseWord,
-    lowerCaseWord.replace(/['’]/g, ''),
-    lowerCaseWord.replace(/[^a-z]/g, ''),
-    lowerCaseWord.replace(/\s+/g, '-'),
-    lowerCaseWord.replace(/\s+/g, ''),
-  ];
-
-  return [...new Set(candidates.filter((candidate) => candidate && candidate.length > 1))];
-}
+let currentAudioUrl = '';
+let currentDefinitionText = '';
+let wordAudio = null;
+let wordUtterance = null;
 
 function getLookupErrorMessage(error) {
   if (
@@ -99,29 +88,110 @@ function updateSaveButton() {
   const isSaved = savedWords.some((word) => word.toLowerCase() === currentWord.toLowerCase());
   saveWordButton.disabled = !currentWord || isSaved;
   saveWordButton.textContent = isSaved ? 'Word saved' : 'Save word';
+  playWordButton.disabled = !currentWord;
 }
 
-function saveWord(word) {
-  if (savedWords.some((savedWord) => savedWord.toLowerCase() === word.toLowerCase())) {
+function stopWordPlayback() {
+  if (wordAudio) {
+    const audio = wordAudio;
+    wordAudio = null;
+    audio.pause();
+    audio.currentTime = 0;
+  }
+  if (wordUtterance) {
+    wordUtterance = null;
+  }
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+}
+
+function speakText(text, onComplete) {
+  if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+    pronunciationStatus.textContent = 'Spoken definition playback is not supported by this browser.';
     return;
   }
 
-  savedWords.push(word);
+  const utterance = new SpeechSynthesisUtterance(text);
+  wordUtterance = utterance;
+  utterance.lang = 'en-US';
+  utterance.onend = () => {
+    if (wordUtterance !== utterance) return;
+    wordUtterance = null;
+    onComplete();
+  };
+  utterance.onerror = () => {
+    if (wordUtterance !== utterance) return;
+    wordUtterance = null;
+    pronunciationStatus.textContent = 'Could not play this word. Please try again.';
+  };
+  window.speechSynthesis.speak(utterance);
+  pronunciationStatus.textContent = 'Playing word and definition.';
+}
+
+async function playCurrentWord() {
+  if (!currentWord) return;
+
+  const word = currentWord;
+  const spokenDefinition = currentDefinitionText
+    ? `Definition: ${currentDefinitionText}`
+    : 'No definition was provided.';
+  stopWordPlayback();
+  pronunciationStatus.textContent = '';
+
+  if (!currentAudioUrl) {
+    speakText(`${word}. ${spokenDefinition}`, () => {
+      pronunciationStatus.textContent = '';
+    });
+    return;
+  }
+
+  const audio = new Audio(currentAudioUrl);
+  wordAudio = audio;
+  audio.addEventListener('ended', () => {
+    if (wordAudio === audio) {
+      wordAudio = null;
+      speakText(spokenDefinition, () => {
+        pronunciationStatus.textContent = '';
+      });
+    }
+  }, { once: true });
+  audio.addEventListener('error', () => {
+    if (wordAudio !== audio) return;
+    wordAudio = null;
+    speakText(`${word}. ${spokenDefinition}`, () => {
+      pronunciationStatus.textContent = '';
+    });
+  }, { once: true });
+
+  try {
+    await audio.play();
+    if (wordAudio !== audio) return;
+    pronunciationStatus.textContent = `Playing "${word}", then its definition.`;
+  } catch {
+    if (wordAudio !== audio) return;
+    wordAudio = null;
+    speakText(`${word}. ${spokenDefinition}`, () => {
+      pronunciationStatus.textContent = '';
+    });
+  }
+}
+
+function updateSavedWords(status) {
   renderSavedWords();
   updateSaveButton();
+  if (persistSavedWords()) savedWordsStatus.textContent = status;
+}
 
-  if (persistSavedWords()) {
-    savedWordsStatus.textContent = `"${word}" saved.`;
-  }
+function saveWord(word) {
+  if (savedWords.some((savedWord) => savedWord.toLowerCase() === word.toLowerCase())) return;
+  savedWords.push(word);
+  updateSavedWords(`"${word}" saved.`);
 }
 
 function removeSavedWord(word) {
   savedWords = savedWords.filter((savedWord) => savedWord.toLowerCase() !== word.toLowerCase());
-  renderSavedWords();
-  updateSaveButton();
-  if (persistSavedWords()) {
-    savedWordsStatus.textContent = `"${word}" removed from saved words.`;
-  }
+  updateSavedWords(`"${word}" removed from saved words.`);
 }
 
 renderSavedWords();
@@ -132,6 +202,8 @@ saveWordButton.addEventListener('click', () => {
     saveWord(currentWord);
   }
 });
+
+playWordButton.addEventListener('click', playCurrentWord);
 
 savedWordsList.addEventListener('click', (event) => {
   const button = event.target.closest('button');
@@ -151,90 +223,76 @@ form.addEventListener('submit', async (event) => {
   const word = searchField.value.trim();
 
   if (!word) {
+    stopWordPlayback();
     definition.textContent = 'Please enter a word to search.';
     currentWord = '';
+    currentAudioUrl = '';
+    currentDefinitionText = '';
     updateSaveButton();
+    pronunciationStatus.textContent = '';
     return;
   }
 
-  if (activeSearchController) {
-    activeSearchController.abort();
-  }
+  activeSearchController?.abort();
+  stopWordPlayback();
 
-  const searchCandidates = getSearchCandidates(word);
-
-  if (!searchCandidates.length) {
-    definition.textContent = 'Please enter a valid English word to search.';
-    currentWord = '';
-    updateSaveButton();
-    return;
-  }
+  const searchWord = word.toLowerCase();
 
   const requestId = ++activeSearchId;
   activeSearchController = new AbortController();
   currentWord = '';
+  currentAudioUrl = '';
+  currentDefinitionText = '';
   updateSaveButton();
+  pronunciationStatus.textContent = '';
   definition.textContent = 'Searching...';
   synonymsAntonyms.textContent = '';
 
   try {
-    for (const candidate of searchCandidates) {
-      const response = await fetch(
-        `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(candidate)}`,
-        { signal: activeSearchController.signal }
-      );
+    const response = await fetch(
+      `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(searchWord)}`,
+      { signal: activeSearchController.signal }
+    );
 
-      if (requestId !== activeSearchId) {
-        return;
-      }
-
-      if (response.status === 404) {
-        continue;
-      }
-
-      if (!response.ok) {
-        throw new Error('The dictionary service is temporarily unavailable. Please try again.');
-      }
-
-      const data = await response.json();
-      const entry = Array.isArray(data) ? data[0] : null;
-      if (!entry || typeof entry !== 'object') {
-        throw new Error('The dictionary returned an unexpected response. Please try again.');
-      }
-
-      currentWord = entry.word || candidate;
-      const meanings = Array.isArray(entry.meanings) ? entry.meanings : [];
-
-      const definitions = meanings.flatMap((meaning) =>
-        (Array.isArray(meaning.definitions) ? meaning.definitions : []).map(
-          (item) => `${meaning.partOfSpeech || 'Definition'}: ${item.definition || 'No definition provided.'}`
-        )
-      );
-
-      definition.textContent = definitions.length
-        ? definitions.join(' ')
-        : `No definition was provided for "${currentWord}".`;
-
-      const synonyms = [
-        ...new Set(
-          meanings.flatMap((meaning) => Array.isArray(meaning.synonyms) ? meaning.synonyms : [])
-        )
-      ];
-      const antonyms = [
-        ...new Set(
-          meanings.flatMap((meaning) => Array.isArray(meaning.antonyms) ? meaning.antonyms : [])
-        )
-      ];
-
-      synonymsAntonyms.textContent =
-        `Synonyms: ${synonyms.join(', ') || 'None listed'} | ` +
-        `Antonyms: ${antonyms.join(', ') || 'None listed'}`;
-
-      updateSaveButton();
-      return;
+    if (requestId !== activeSearchId) return;
+    if (response.status === 404) {
+      throw new Error(`No dictionary entry was found for "${word}". Check the spelling and try again.`);
+    }
+    if (!response.ok) {
+      throw new Error('The dictionary service is temporarily unavailable. Please try again.');
     }
 
-    throw new Error(`No dictionary entry was found for "${word}". Check the spelling and try again.`);
+    const data = await response.json();
+    const entry = Array.isArray(data) ? data[0] : null;
+    if (!entry || typeof entry !== 'object') {
+      throw new Error('The dictionary returned an unexpected response. Please try again.');
+    }
+
+    currentWord = entry.word || searchWord;
+    const phonetics = Array.isArray(entry.phonetics) ? entry.phonetics : [];
+    const audioUrl = phonetics.map((phonetic) => phonetic.audio).find(
+      (audio) => typeof audio === 'string' && audio.trim()
+    );
+    currentAudioUrl = audioUrl
+      ? `${audioUrl.startsWith('//') ? 'https:' : ''}${audioUrl}`
+      : '';
+    const meanings = Array.isArray(entry.meanings) ? entry.meanings : [];
+    const definitions = meanings.flatMap((meaning) =>
+      (Array.isArray(meaning.definitions) ? meaning.definitions : []).map(
+        (item) => `${meaning.partOfSpeech || 'Definition'}: ${item.definition || 'No definition provided.'}`
+      )
+    );
+    const synonyms = [...new Set(meanings.flatMap((meaning) => Array.isArray(meaning.synonyms) ? meaning.synonyms : []))];
+    const antonyms = [...new Set(meanings.flatMap((meaning) => Array.isArray(meaning.antonyms) ? meaning.antonyms : []))];
+
+    currentDefinitionText = definitions.length
+      ? definitions.join(' ')
+      : `No definition was provided for "${currentWord}".`;
+    definition.textContent = currentDefinitionText;
+    synonymsAntonyms.textContent =
+      `Synonyms: ${synonyms.join(', ') || 'None listed'} | ` +
+      `Antonyms: ${antonyms.join(', ') || 'None listed'}`;
+    updateSaveButton();
   } catch (error) {
     if (error.name === 'AbortError') {
       return;
@@ -245,6 +303,8 @@ form.addEventListener('submit', async (event) => {
     }
 
     currentWord = '';
+    currentAudioUrl = '';
+    currentDefinitionText = '';
     updateSaveButton();
     definition.textContent = getLookupErrorMessage(error);
   } finally {
